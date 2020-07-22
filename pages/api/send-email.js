@@ -1,6 +1,11 @@
-AWS = require('aws-sdk'),
-SES = new AWS.SES({ region: "us-east-1" }),
+AWS = require('aws-sdk')
+SES = new AWS.SES
 
+AWS.config.update({
+    accessKeyId:process.env.accessKeyId,
+    secretAccessKey:process.env.secretAccessKey,
+    region:"us-east-1"
+  });
 EMAIL = 'mohammed@serverlessguru.com',
 UTF8CHARSET = 'UTF-8';
 
