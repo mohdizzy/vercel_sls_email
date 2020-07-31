@@ -1,46 +1,42 @@
-AWS = require('aws-sdk')
-SES = new AWS.SES
-
-AWS.config.update({
-    accessKeyId:process.env.accessKeyId,
-    secretAccessKey:process.env.secretAccessKey,
-    region:"us-east-1"
+export default async (req, res) => {
+  const AWS = require("aws-sdk");
+  AWS.config.update({
+    accessKeyId: process.env.accessKeyId,
+    secretAccessKey: process.env.secretAccessKey,
+    region: "us-east-1",
   });
-EMAIL = 'mohammed@serverlessguru.com',
-UTF8CHARSET = 'UTF-8';
+  const ses = new AWS.SES();
+  const EMAIL = process.env.email;
+  const UTF8CHARSET = "UTF-8";
 
-module.exports = async (req,res) => {
-
-    const emailData = JSON.parse(req);
-    console.log(req);
-
-    if (!emailData.name || !emailData.message || !emailData.email) {
-        res.status(400).send("Please fill all inputs");
-    }
-
- 
-    const body = emailData.message;
-
-    const emailParams = {
-        Destination: EMAIL,
-        Message: {
-            Body: body,
-            Subject: {
-                Charset: UTF8CHARSET,
-                Data: `Email from ${emailData.name}`
-            }
+  const emailParams = {
+    Destination: { ToAddresses: [EMAIL] },
+    Message: {
+      Body: {
+        Text: {
+          Charset: UTF8CHARSET,
+          Data: req.body.message,
         },
-        Source: EMAIL
-    };
+      },
+      Subject: {
+        Charset: UTF8CHARSET,
+        Data: `Email from ${req.body.name}, contact email:${req.body.email}`,
+      },
+    },
+    Source: EMAIL,
+  };
 
+  try {
+    await ses.sendEmail(emailParams).promise();
+    res.statusCode = 200
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify({ message: 'Email sent' }))
+    res.send()
+  } catch (err) {
+    res.statusCode = 400
+    res.setHeader('Content-Type', 'application/json')
+    res.end(JSON.stringify({ Error: err }))
+    res.send()
 
-    try {
-        await SES.sendEmail(emailParams).promise();
-        res.status(200);
-        res.send("Thank you providing your details");
-    } catch (err) {
-        console.error(err, err.stack);
-        res.status(400).send(err);
-    }
+  }
 };
-
